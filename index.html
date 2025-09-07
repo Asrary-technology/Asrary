@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير درجات اختبار طلاب مدارس أسراري  الرقمية</title>
+    <meta name="description" content="تقرير شامل لنتائج اختبارات طلاب مدارس أستراليا الرقمية للفترة 2023-2025">
+    
+    <!-- React and React DOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Recharts -->
+    <script src="https://unpkg.com/recharts@2.8.0/lib/index.js"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        
+        body { 
+            font-family: 'Cairo', 'Arial', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .app-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .chart-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-button {
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        
+        .control-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .analysis-section {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1.5rem;
+            border-left: 5px solid #3b82f6;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div>جاري تحميل التقرير...</div>
+    </div>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } = Recharts;
+
+        const AustraliaDigitalSchoolsChart = () => {
+            const [chartType, setChartType] = useState('line');
+            const [selectedMetric, setSelectedMetric] = useState('all');
+            const [isLoaded, setIsLoaded] = useState(false);
+
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    setIsLoaded(true);
+                    document.getElementById('loading').style.display = 'none';
+                }, 1000);
+                
+                return () => clearTimeout(timer);
+            }, []);
+
+            // البيانات من الجدول
+            const data = [
+                {
+                    year: 2023,
+                    mathematics: 60.9,
+                    science: 33.3,
+                    reading: 33.3,
+                    average: 29.2
+                },
+                {
+                    year: 2024,
+                    mathematics: 33.3,
+                    science: 16.7,
+                    reading: 16.7,
+                    average: 13.8
+                },
+                {
+                    year: 2025,
+                    mathematics: 43.5,
+                    science: 12.5,
+                    reading: 31,
+                    average: 26.1
+                }
+            ];
+
+            // بيانات التغيرات السنوية
+            const changeData = [
+                {
+                    subject: 'الرياضيات',
+                    change2024: -4.07,
+                    change2025: 10.99,
+                    totalChange: 65.29
+                },
+                {
+                    subject: 'العلوم',
+                    change2024: -9.77,
+                    change2025: 7.64,
+                    totalChange: -4.49
+                },
+                {
+                    subject: 'القراءة',
+                    change2024: -8.76,
+                    change2025: 3.31,
+                    totalChange: 2.92
+                },
+                {
+                    subject: 'المتوسط',
+                    change2024: 0.05,
+                    change2025: 8.44,
+                    totalChange: 5.86
+                }
+            ];
+
+            const colors = {
+                mathematics: '#8884d8',
+                science: '#82ca9d',
+                reading: '#ffc658',
+                average: '#ff7300'
+            };
+
+            const arabicLabels = {
+                mathematics: 'الرياضيات',
+                science: 'العلوم',
+                reading: 'القراءة',
+                average: 'المتوسط'
+            };
+
+            const CustomTooltip = ({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                    return (
+                        <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-xl" dir="rtl">
+                            <p className="font-semibold text-gray-800 mb-2">{`السنة: ${label}`}</p>
+                            {payload.map((pld, index) => (
+                                <p key={index} style={{ color: pld.color }} className="font-medium">
+                                    {`${arabicLabels[pld.dataKey]}: ${pld.value}%`}
+                                </p>
+                            ))}
+                        </div>
+                    );
+                }
+                return null;
+            };
+
+            const renderChart = () => {
+                if (chartType === 'line') {
+                    return (
+                        <ResponsiveContainer width="100%" height={450}>
+                            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis 
+                                    dataKey="year" 
+                                    tick={{ fontSize: 14, fill: '#374151' }}
+                                    axisLine={{ stroke: '#9ca3af' }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                    label={{ value: 'السنة', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#374151' } }}
+                                />
+                                <YAxis 
+                                    tick={{ fontSize: 14, fill: '#374151' }}
+                                    axisLine={{ stroke: '#9ca3af' }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                    label={{ value: 'النسبة المئوية (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#374151' } }}
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend 
+                                    wrapperStyle={{ paddingTop: '20px' }}
+                                    formatter={(value) => <span style={{ color: '#374151' }}>{arabicLabels[value]}</span>}
+                                />
+                                {(selectedMetric === 'all' || selectedMetric === 'mathematics') && (
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="mathematics" 
+                                        stroke={colors.mathematics} 
+                                        strokeWidth={4}
+                                        dot={{ fill: colors.mathematics, strokeWidth: 2, r: 8 }}
+                                        activeDot={{ r: 10, stroke: colors.mathematics, strokeWidth: 2 }}
+                                    />
+                                )}
+                                {(selectedMetric === 'all' || selectedMetric === 'science') && (
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="science" 
+                                        stroke={colors.science} 
+                                        strokeWidth={4}
+                                        dot={{ fill: colors.science, strokeWidth: 2, r: 8 }}
+                                        activeDot={{ r: 10, stroke: colors.science, strokeWidth: 2 }}
+                                    />
+                                )}
+                                {(selectedMetric === 'all' || selectedMetric === 'reading') && (
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="reading" 
+                                        stroke={colors.reading} 
+                                        strokeWidth={4}
+                                        dot={{ fill: colors.reading, strokeWidth: 2, r: 8 }}
+                                        activeDot={{ r: 10, stroke: colors.reading, strokeWidth: 2 }}
+                                    />
+                                )}
+                                {(selectedMetric === 'all' || selectedMetric === 'average') && (
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="average" 
+                                        stroke={colors.average} 
+                                        strokeWidth={4}
+                                        dot={{ fill: colors.average, strokeWidth: 2, r: 8 }}
+                                        activeDot={{ r: 10, stroke: colors.average, strokeWidth: 2 }}
+                                    />
+                                )}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    );
+                } else {
+                    return (
+                        <ResponsiveContainer width="100%" height={450}>
+                            <BarChart data={changeData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis 
+                                    dataKey="subject" 
+                                    tick={{ fontSize: 14, fill: '#374151' }}
+                                    interval={0}
+                                    angle={-45}
+                                    textAnchor="end"
+                                    height={80}
+                                    axisLine={{ stroke: '#9ca3af' }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                />
+                                <YAxis 
+                                    tick={{ fontSize: 14, fill: '#374151' }}
+                                    axisLine={{ stroke: '#9ca3af' }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                    label={{ value: 'معدل التغيير (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#374151' } }}
+                                />
+                                <Tooltip 
+                                    formatter={(value, name) => [
+                                        `${value}%`, 
+                                        name === 'change2024' ? 'التغيير 2024' : 
+                                        name === 'change2025' ? 'التغيير 2025' : 'التغيير الإجمالي'
+                                    ]}
+                                    labelStyle={{ direction: 'rtl', color: '#374151' }}
+                                    contentStyle={{ direction: 'rtl', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                                />
+                                <Legend 
+                                    formatter={(value) => 
+                                        <span style={{ color: '#374151' }}>
+                                            {value === 'change2024' ? 'التغيير 2024' : 
+                                            value === 'change2025' ? 'التغيير 2025' : 'التغيير الإجمالي'}
+                                        </span>
+                                    }
+                                />
+                                <Bar dataKey="change2024" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="change2025" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="totalChange" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    );
+                }
+            };
+
+            if (!isLoaded) return null;
+
+            return (
+                <div className="w-full max-w-7xl mx-auto app-container fade-in" dir="rtl">
+                    {/* Header */}
+                    <div className="header-gradient">
+                        <h1 className="text-4xl font-bold mb-3">
+                            تقرير درجات اختبار طلاب مدارس أستراليا الرقمية
+                        </h1>
+                        <p className="text-xl opacity-90">
+                            نسبة الطلاب المجتازين لكل مادة (2023-2025)
+                        </p>
+                        <div className="mt-4 text-sm opacity-75">
+                            تقرير شامل ومتفاعل لنتائج الاختبارات
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex flex-wrap justify-center gap-6 p-6 bg-gray-50">
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setChartType('line')}
+                                className={`control-button px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                                    chartType === 'line' 
+                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                                        : 'bg-white text-gray-700 hover:bg-gray-100 shadow-md border border-gray-200'
+                                }`}
+                            >
+                                📈 الرسم الخطي
+                            </button>
+                            <button
+                                onClick={() => setChartType('bar')}
+                                className={`control-button px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                                    chartType === 'bar' 
+                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                                        : 'bg-white text-gray-700 hover:bg-gray-100 shadow-md border border-gray-200'
+                                }`}
+                            >
+                                📊 رسم التغييرات
+                            </button>
+                        </div>
+
+                        {chartType === 'line' && (
+                            <div className="flex gap-3">
+                                <select
+                                    value={selectedMetric}
+                                    onChange={(e) => setSelectedMetric(e.target.value)}
+                                    className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-md font-medium"
+                                >
+                                    <option value="all">🔍 جميع المواد</option>
+                                    <option value="mathematics">🔢 الرياضيات فقط</option>
+                                    <option value="science">🧪 العلوم فقط</option>
+                                    <option value="reading">📚 القراءة فقط</option>
+                                    <option value="average">📊 المتوسط فقط</option>
+                                </select>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Chart */}
+                    <div className="chart-container">
+                        {renderChart()}
+                    </div>
+
+                    {/* Statistics Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+                        {Object.entries(arabicLabels).map(([key, label]) => {
+                            const latestValue = data[data.length - 1][key];
+                            const previousValue = data[data.length - 2][key];
+                            const change = latestValue - previousValue;
+                            const isPositive = change >= 0;
+                            
+                            const icons = {
+                                mathematics: '🔢',
+                                science: '🧪',
+                                reading: '📚',
+                                average: '📊'
+                            };
+                            
+                            return (
+                                <div key={key} className="stat-card">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-lg font-bold text-gray-800">{label}</h3>
+                                        <span className="text-2xl">{icons[key]}</span>
+                                    </div>
+                                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                                        {latestValue}%
+                                    </div>
+                                    <div className={`text-sm font-semibold flex items-center ${
+                                        isPositive ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                        <span className="text-lg ml-1">
+                                            {isPositive ? '📈' : '📉'}
+                                        </span>
+                                        {change > 0 ? '+' : ''}{change.toFixed(1)}% من العام السابق
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Analysis */}
+                    <div className="analysis-section">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span className="ml-3">📋</span>
+                            التحليل والملاحظات الرئيسية
+                        </h2>
+                        <div className="space-y-4 text-gray-700 leading-relaxed">
+                            <div className="bg-white p-4 rounded-lg border-r-4 border-blue-500">
+                                <p className="font-semibold text-blue-800 mb-2">🎓 الصف الثالث الابتدائي:</p>
+                                <p>لم يُجر الاختبار لطلاب الصف الثالث الابتدائي لأول مرة عام 2025 في قسم الرياضيات والقراءة فقط، مما يشير إلى تطوير منهجية التقييم.</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border-r-4 border-orange-500">
+                                <p className="font-semibold text-orange-800 mb-2">📐 الصف السادس الابتدائي:</p>
+                                <p>بالمقارنة مع السنة الماضية، هناك انخفاض ملحوظ في قسم الرياضيات بنسبة 10.99% بينما شهد قسم العلوم ارتفاعاً إيجابياً بنسبة 7.40%.</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border-r-4 border-green-500">
+                                <p className="font-semibold text-green-800 mb-2">🎯 الصف الثالث المتوسط:</p>
+                                <p>تحسن شامل في جميع المواد: ارتفاع الرياضيات بنسبة 7.31%، والعلوم بنسبة 8.44%، والقراءة بنسبة 5.05% من العام السابق، مما يعكس فعالية البرامج التعليمية.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="footer">
+                        <p>© 2025 تقرير مدارس أستراليا الرقمية | تم إنشاء هذا التقرير بواسطة تقنيات تفاعلية حديثة</p>
+                        <p className="mt-2 text-xs">آخر تحديث: سبتمبر 2025</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the application
+        ReactDOM.render(<AustraliaDigitalSchoolsChart />, document.getElementById('root'));
+    </script>
+</body>
+</html>
